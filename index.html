@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <title>買車囉 — 大羊速克達車廂容量完整分析（2026 年 5 月版）</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root{
+  /* ============ THEMES ============ */
+  :root[data-theme="light"]{
     --bg:#f7f8fa;
     --surface:#ffffff;
     --surface-2:#f1f3f7;
+    --surface-3:#fafbfd;
     --border:#e3e6ec;
+    --border-soft:#eef0f4;
     --text:#1d2433;
     --text-soft:#5b6478;
     --muted:#8a91a3;
@@ -22,117 +27,356 @@
     --green-soft:#d1fae5;
     --red:#dc2626;
     --red-soft:#fee2e2;
+    --pill-white-bg:#e5e7eb;
+    --pill-white-fg:#374151;
+    --hero-grad-from:#ffffff;
+    --hero-grad-to:#eef2ff;
+    --tldr-grad-from:#fff7ed;
+    --reco-grad-from:#ecfdf5;
+    --caveat-grad-from:#fef2f2;
     --shadow:0 1px 3px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.04);
+    --shadow-lg:0 4px 12px rgba(15,23,42,.08), 0 12px 32px rgba(15,23,42,.06);
+    --chart-grid:#eef0f4;
+    --chart-text:#5b6478;
+    --doughnut-border:#ffffff;
   }
+  :root[data-theme="dark"]{
+    --bg:#0f1419;
+    --surface:#1a1f2e;
+    --surface-2:#232838;
+    --surface-3:#1f2433;
+    --border:#2d3548;
+    --border-soft:#262d3f;
+    --text:#e8eaed;
+    --text-soft:#a8b0bf;
+    --muted:#7a8395;
+    --accent:#60a5fa;
+    --accent-soft:rgba(96,165,250,.18);
+    --gold:#fbbf24;
+    --gold-soft:rgba(251,191,36,.16);
+    --green:#34d399;
+    --green-soft:rgba(52,211,153,.16);
+    --red:#f87171;
+    --red-soft:rgba(248,113,113,.16);
+    --pill-white-bg:#374151;
+    --pill-white-fg:#d1d5db;
+    --hero-grad-from:#1a1f2e;
+    --hero-grad-to:#1e2a4a;
+    --tldr-grad-from:rgba(251,191,36,.08);
+    --reco-grad-from:rgba(52,211,153,.08);
+    --caveat-grad-from:rgba(248,113,113,.08);
+    --shadow:0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.2);
+    --shadow-lg:0 4px 12px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.3);
+    --chart-grid:#2d3548;
+    --chart-text:#a8b0bf;
+    --doughnut-border:#1a1f2e;
+  }
+
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    line-height:1.7;-webkit-font-smoothing:antialiased}
+    line-height:1.7;-webkit-font-smoothing:antialiased;
+    font-size:18px;
+    transition:background-color .25s ease, color .25s ease}
+  /* respect safe-area on phones with notch */
+  body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+
   .container{max-width:1180px;margin:0 auto;padding:32px 24px 80px}
 
-  /* Header */
-  header.hero{background:linear-gradient(135deg,#ffffff 0%,#eef2ff 100%);
+  /* ============ THEME TOGGLE ============ */
+  .theme-toggle{
+    position:fixed;top:18px;right:18px;z-index:100;
+    width:48px;height:48px;border-radius:50%;
+    background:var(--surface);border:1px solid var(--border);
+    box-shadow:var(--shadow-lg);
+    display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:transform .2s ease, background-color .25s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .theme-toggle:hover{transform:scale(1.06)}
+  .theme-toggle:active{transform:scale(.95)}
+  .theme-toggle svg{width:22px;height:22px;color:var(--text);transition:color .25s ease}
+  .theme-toggle .icon-moon{display:none}
+  .theme-toggle .icon-sun{display:block}
+  :root[data-theme="dark"] .theme-toggle .icon-moon{display:block}
+  :root[data-theme="dark"] .theme-toggle .icon-sun{display:none}
+
+  /* ============ HEADER ============ */
+  header.hero{background:linear-gradient(135deg,var(--hero-grad-from) 0%,var(--hero-grad-to) 100%);
     border:1px solid var(--border);border-radius:16px;padding:36px 36px;margin-bottom:32px;
-    box-shadow:var(--shadow)}
+    box-shadow:var(--shadow);transition:background .25s ease, border-color .25s ease}
   header.hero .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);
-    font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.5px;margin-bottom:12px}
-  header.hero h1{margin:0 0 10px;font-size:32px;font-weight:800;letter-spacing:-.5px}
-  header.hero .sub{margin:0;color:var(--text-soft);font-size:15px}
-  header.hero .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:18px;color:var(--muted);font-size:13px}
+    font-size:15px;font-weight:600;padding:4px 12px;border-radius:999px;letter-spacing:.5px;margin-bottom:12px}
+  header.hero h1{margin:0 0 10px;font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.3}
+  header.hero .sub{margin:0;color:var(--text-soft);font-size:17px;line-height:1.6}
+  header.hero .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:18px;color:var(--muted);font-size:15px}
   header.hero .meta span{display:inline-flex;align-items:center;gap:6px}
 
-  /* Section */
+  /* ============ SECTION ============ */
   section{background:var(--surface);border:1px solid var(--border);border-radius:14px;
-    padding:28px 32px;margin-bottom:24px;box-shadow:var(--shadow)}
-  section h2{margin:0 0 18px;font-size:22px;font-weight:700;padding-bottom:12px;
-    border-bottom:2px solid var(--accent-soft);display:flex;align-items:center;gap:10px}
-  section h2 .ico{width:30px;height:30px;background:var(--accent);color:#fff;border-radius:8px;
-    display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
-  section h3{margin:24px 0 12px;font-size:17px;font-weight:700;color:var(--text)}
+    padding:28px 32px;margin-bottom:24px;box-shadow:var(--shadow);
+    transition:background .25s ease, border-color .25s ease}
+  section h2{margin:0 0 18px;font-size:24px;font-weight:700;padding-bottom:12px;
+    border-bottom:2px solid var(--accent-soft);display:flex;align-items:center;gap:10px;line-height:1.3}
+  section h2 .ico{width:32px;height:32px;background:var(--accent);color:#fff;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+  section h3{margin:24px 0 12px;font-size:19px;font-weight:700;color:var(--text);line-height:1.4}
 
-  /* Cards / KPI */
+  /* ============ KPI ============ */
   .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:8px}
-  .kpi{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px}
-  .kpi .label{color:var(--text-soft);font-size:13px;margin-bottom:6px}
-  .kpi .value{font-size:24px;font-weight:800;color:var(--text)}
-  .kpi .unit{font-size:13px;color:var(--muted);margin-left:4px}
-  .kpi .sub{margin-top:4px;font-size:12px;color:var(--muted)}
+  .kpi{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px;
+    transition:background .25s ease, border-color .25s ease}
+  .kpi .label{color:var(--text-soft);font-size:15px;margin-bottom:6px}
+  .kpi .value{font-size:26px;font-weight:800;color:var(--text);line-height:1.2}
+  .kpi .unit{font-size:15px;color:var(--muted);margin-left:4px;font-weight:600}
+  .kpi .sub{margin-top:4px;font-size:14px;color:var(--muted)}
 
-  /* TL;DR boxes */
-  .tldr{background:linear-gradient(135deg,#fff7ed 0%,#fff 100%);
-    border-left:4px solid var(--gold);border-radius:10px;padding:18px 20px;margin:8px 0 18px}
+  /* ============ TLDR / RECO / CAVEAT BOXES ============ */
+  .tldr{background:linear-gradient(135deg,var(--tldr-grad-from) 0%,var(--surface) 100%);
+    border-left:4px solid var(--gold);border-radius:10px;padding:18px 20px;margin:8px 0 18px;
+    transition:background .25s ease}
   .tldr strong{color:var(--gold)}
   .tldr ul{margin:8px 0 0;padding-left:20px}
   .tldr li{margin-bottom:6px}
 
-  /* Tables */
-  .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--surface)}
+  .reco{background:linear-gradient(135deg,var(--reco-grad-from) 0%,var(--surface) 100%);
+    border-left:4px solid var(--green);padding:14px 18px;border-radius:10px;margin-bottom:12px;
+    transition:background .25s ease}
+  .reco strong{color:var(--green)}
+
+  .caveat{background:linear-gradient(135deg,var(--caveat-grad-from) 0%,var(--surface) 100%);
+    border-left:4px solid var(--red);padding:14px 18px;border-radius:10px;margin-bottom:10px;
+    transition:background .25s ease}
+  .caveat strong{color:var(--red)}
+
+  /* ============ TABLES ============ */
+  .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);
+    -webkit-overflow-scrolling:touch;
+    background:var(--surface);
+    /* subtle scroll-hint shadow */
+    background-image:
+      linear-gradient(to right, var(--surface), var(--surface)),
+      linear-gradient(to right, var(--surface), var(--surface)),
+      linear-gradient(to right, rgba(0,0,0,.08), rgba(0,0,0,0)),
+      linear-gradient(to left,  rgba(0,0,0,.08), rgba(0,0,0,0));
+    background-position: left center, right center, left center, right center;
+    background-repeat: no-repeat;
+    background-color: var(--surface);
+    background-size: 24px 100%, 24px 100%, 12px 100%, 12px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+  table{width:100%;border-collapse:collapse;font-size:15.5px;background:var(--surface);min-width:640px}
   thead th{background:var(--surface-2);color:var(--text);font-weight:700;
     padding:12px 10px;text-align:left;border-bottom:1px solid var(--border);
-    position:sticky;top:0;white-space:nowrap}
+    position:sticky;top:0;white-space:nowrap;font-size:15.5px}
   tbody td{padding:11px 10px;border-bottom:1px solid var(--border);vertical-align:top}
-  tbody tr:hover{background:#fafbfd}
+  tbody tr:hover{background:var(--surface-3)}
   tbody tr:last-child td{border-bottom:none}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:14px;font-weight:600;
+    white-space:nowrap}
   .pill-red{background:var(--red-soft);color:var(--red)}
   .pill-yellow{background:var(--gold-soft);color:var(--gold)}
-  .pill-white{background:#e5e7eb;color:#374151}
+  .pill-white{background:var(--pill-white-bg);color:var(--pill-white-fg)}
   .pill-green{background:var(--green-soft);color:var(--green)}
   .pill-blue{background:var(--accent-soft);color:var(--accent)}
   .star{color:var(--gold);font-weight:700}
 
-  /* Charts */
-  .chart-grid{display:grid;grid-template-columns:1fr;gap:24px}
-  .chart-grid.two{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
-  .chart-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:20px}
-  .chart-card h4{margin:0 0 14px;font-size:15px;font-weight:700;color:var(--text)}
-  .chart-card .note{margin-top:10px;color:var(--muted);font-size:12px}
-  .chart-box{position:relative;height:380px}
-  .chart-box.tall{height:560px}
-
-  /* Detail blocks */
-  .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:12px}
-  .detail-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;
-    padding:18px;position:relative;overflow:hidden}
-  .detail-card .rank{position:absolute;top:14px;right:16px;font-size:13px;
-    color:var(--muted);font-weight:700}
-  .detail-card h4{margin:0 0 4px;font-size:16px;font-weight:700}
-  .detail-card .brand{font-size:12px;color:var(--text-soft);margin-bottom:10px}
-  .detail-card .stat-row{display:flex;justify-content:space-between;padding:6px 0;
-    border-top:1px dashed var(--border);font-size:13.5px}
-  .detail-card .stat-row span:first-child{color:var(--text-soft)}
-  .detail-card .stat-row span:last-child{font-weight:600}
-
-  /* Reco / Caveats */
-  .reco{background:linear-gradient(135deg,#ecfdf5 0%,#fff 100%);border-left:4px solid var(--green);
-    padding:14px 18px;border-radius:10px;margin-bottom:12px}
-  .reco strong{color:var(--green)}
-  .caveat{background:linear-gradient(135deg,#fef2f2 0%,#fff 100%);border-left:4px solid var(--red);
-    padding:14px 18px;border-radius:10px;margin-bottom:10px}
-  .caveat strong{color:var(--red)}
-
-  /* Tabs */
-  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border)}
-  .tabs button{background:transparent;border:none;padding:10px 18px;font-size:14px;font-weight:600;
-    color:var(--text-soft);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit}
+  /* ============ TABS ============ */
+  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);
+    overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{background:transparent;border:none;padding:10px 18px;font-size:16px;font-weight:600;
+    color:var(--text-soft);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;
+    white-space:nowrap;transition:color .2s ease, border-color .2s ease;
+    -webkit-tap-highlight-color:transparent}
   .tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tabs button:hover{color:var(--text)}
   .tab-panel{display:none}
   .tab-panel.active{display:block}
 
-  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;padding:20px}
+  /* ============ CHARTS ============ */
+  .chart-grid{display:grid;grid-template-columns:1fr;gap:24px}
+  .chart-grid.two{grid-template-columns:repeat(auto-fit,minmax(440px,1fr))}
+  .chart-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:20px;
+    transition:background .25s ease, border-color .25s ease}
+  .chart-card h4{margin:0 0 14px;font-size:17px;font-weight:700;color:var(--text);line-height:1.4}
+  .chart-card .note{margin-top:10px;color:var(--muted);font-size:14px;line-height:1.6}
+  .chart-box{position:relative;height:380px}
+  .chart-box.tall{height:560px}
+
+  /* ============ DETAIL CARDS ============ */
+  .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:12px}
+  .detail-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;
+    padding:18px;position:relative;overflow:hidden;
+    transition:background .25s ease, border-color .25s ease, transform .15s ease}
+  .detail-card:hover{transform:translateY(-2px)}
+  .detail-card .rank{position:absolute;top:14px;right:16px;font-size:15px;
+    color:var(--muted);font-weight:700}
+  .detail-card h4{margin:0 0 4px;font-size:18px;font-weight:700;padding-right:120px;line-height:1.4}
+  .detail-card .brand{font-size:14px;color:var(--text-soft);margin-bottom:10px}
+  .detail-card .stat-row{display:flex;justify-content:space-between;padding:6px 0;
+    border-top:1px dashed var(--border);font-size:15.5px;gap:10px}
+  .detail-card .stat-row span:first-child{color:var(--text-soft);flex-shrink:0}
+  .detail-card .stat-row span:last-child{font-weight:600;text-align:right}
+
+  /* ============ FOOTER ============ */
+  footer{text-align:center;color:var(--muted);font-size:14px;margin-top:30px;padding:20px;line-height:1.7}
   footer a{color:var(--accent);text-decoration:none}
 
-  @media (max-width:720px){
-    .container{padding:16px}
-    header.hero{padding:24px}
-    header.hero h1{font-size:24px}
-    section{padding:20px}
+  /* ============================================================
+     FINE-GRAINED RESPONSIVE BREAKPOINTS
+     1100 / 960 / 768 / 600 / 480 / 380
+  ============================================================ */
+
+  /* Large desktop adjustments */
+  @media (max-width:1100px){
+    .container{max-width:100%;padding:28px 22px 70px}
     .chart-grid.two{grid-template-columns:1fr}
+  }
+
+  /* Small desktop / tablet landscape */
+  @media (max-width:960px){
+    .container{padding:24px 20px 60px}
+    header.hero{padding:32px 30px}
+    header.hero h1{font-size:30px}
+    section{padding:24px 26px}
+    section h2{font-size:22px}
+    section h3{font-size:18px}
+    .chart-box{height:340px}
+    .chart-box.tall{height:500px}
+    .theme-toggle{top:16px;right:16px;width:46px;height:46px}
+  }
+
+  /* Tablet portrait */
+  @media (max-width:768px){
+    body{font-size:17px}
+    .container{padding:20px 16px 50px}
+    header.hero{padding:26px 22px;border-radius:14px;margin-bottom:24px}
+    header.hero .tag{font-size:14px;margin-bottom:10px}
+    header.hero h1{font-size:26px;letter-spacing:-.3px}
+    header.hero .sub{font-size:16px}
+    header.hero .meta{font-size:14px;gap:14px;margin-top:14px}
+    section{padding:22px 20px;border-radius:12px;margin-bottom:20px}
+    section h2{font-size:21px}
+    section h2 .ico{width:30px;height:30px;font-size:15px}
+    section h3{font-size:17px;margin:20px 0 10px}
+    .kpi-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+    .kpi{padding:16px}
+    .kpi .label{font-size:14px}
+    .kpi .value{font-size:24px}
+    .kpi .sub{font-size:13px}
+    .chart-card{padding:18px 16px}
+    .chart-card h4{font-size:16px}
+    .chart-box{height:380px}
+    .chart-box.tall{height:520px}
+    .tabs button{padding:9px 14px;font-size:15px}
+    .detail-grid{gap:14px}
+    .detail-card h4{padding-right:100px;font-size:17px}
+    .detail-card .rank{font-size:13px;top:12px;right:12px}
+    table{font-size:14.5px;min-width:540px}
+    thead th{font-size:14.5px;padding:10px 8px}
+    tbody td{padding:9px 8px}
+    .pill{font-size:13px;padding:2px 8px}
+  }
+
+  /* Phone landscape / small tablet */
+  @media (max-width:600px){
+    body{font-size:16px;line-height:1.65}
+    .container{padding:16px 12px 40px}
+    header.hero{padding:22px 18px;margin-bottom:18px}
+    header.hero .tag{font-size:13px;padding:3px 10px}
+    header.hero h1{font-size:23px}
+    header.hero .sub{font-size:15px}
+    header.hero .meta{gap:10px;font-size:13px}
+    section{padding:18px 16px;border-radius:12px;margin-bottom:16px}
+    section h2{font-size:19px;padding-bottom:10px;margin-bottom:14px}
+    section h2 .ico{width:26px;height:26px;font-size:14px;border-radius:6px}
+    section h3{font-size:16px;margin:18px 0 10px}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+    .kpi{padding:14px}
+    .kpi .label{font-size:13px;margin-bottom:4px}
+    .kpi .value{font-size:21px}
+    .kpi .unit{font-size:13px}
+    .kpi .sub{font-size:12px}
+    .tldr,.reco,.caveat{padding:14px 14px;font-size:15px}
+    .tldr ul{padding-left:18px}
+    .chart-card{padding:14px 12px}
+    .chart-card h4{font-size:15px;margin-bottom:10px}
+    .chart-card .note{font-size:13px;margin-top:8px}
+    .chart-box{height:360px}
+    .chart-box.tall{height:560px}
+    .tabs{gap:2px;margin-bottom:14px}
+    .tabs button{padding:8px 12px;font-size:14px}
+    .detail-grid{grid-template-columns:1fr;gap:12px}
+    .detail-card{padding:16px 14px}
+    .detail-card h4{font-size:16px;padding-right:90px}
+    .detail-card .brand{font-size:13px}
+    .detail-card .stat-row{font-size:14.5px;padding:5px 0}
+    .detail-card .rank{font-size:12px}
+    table{font-size:13.5px;min-width:480px}
+    thead th{font-size:13.5px;padding:9px 6px}
+    tbody td{padding:8px 6px}
+    .pill{font-size:12px;padding:2px 7px}
+    .theme-toggle{top:12px;right:12px;width:42px;height:42px}
+    .theme-toggle svg{width:20px;height:20px}
+    footer{font-size:13px;padding:16px 10px}
+  }
+
+  /* Mobile */
+  @media (max-width:480px){
+    .container{padding:14px 10px 36px}
+    header.hero{padding:20px 16px;border-radius:12px}
+    header.hero h1{font-size:21px;line-height:1.35}
+    header.hero .sub{font-size:14px}
+    header.hero .meta{gap:8px 14px;font-size:12.5px}
+    section{padding:16px 14px;border-radius:10px}
+    section h2{font-size:18px}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+    .kpi{padding:12px}
+    .kpi .value{font-size:19px}
+    .chart-box{height:320px}
+    .chart-box.tall{height:520px}
+    .tabs button{padding:7px 10px;font-size:13.5px}
+    table{font-size:13px;min-width:420px}
+    thead th{padding:8px 5px;font-size:13px}
+    tbody td{padding:7px 5px}
+    .pill{font-size:11.5px;padding:1px 6px}
+    .detail-card h4{padding-right:80px}
+  }
+
+  /* Very small phones */
+  @media (max-width:380px){
+    .container{padding:12px 8px 30px}
+    header.hero{padding:18px 14px}
+    header.hero h1{font-size:19px}
+    .kpi .value{font-size:18px}
+    .chart-box{height:300px}
+    .chart-box.tall{height:480px}
+    section{padding:14px 12px}
+    section h2{font-size:17px;gap:8px}
+    .tabs button{padding:7px 8px;font-size:13px}
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
   }
 </style>
 </head>
 <body>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle" id="themeToggle" aria-label="切換日夜模式" title="切換日夜模式">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+  </svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
+</button>
+
 <div class="container">
 
   <!-- HERO -->
@@ -499,7 +743,7 @@
             <td>GTS 300 Super Sport</td>
             <td><span class="pill pill-yellow">黃牌</span></td>
             <td>278 cc</td>
-            <td>未公布（小）</td>
+            <td>未公布(小)</td>
             <td>NT$335,000</td>
             <td><span class="pill pill-green">太古運通</span></td>
           </tr>
@@ -659,28 +903,106 @@
 </div>
 
 <script>
-// ========== Tabs ==========
+// ============================================================
+// THEME TOGGLE
+// ============================================================
+const root = document.documentElement;
+const themeBtn = document.getElementById('themeToggle');
+const THEME_KEY = 'buy-moto-theme';
+
+function getInitialTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  if(saved === 'light' || saved === 'dark') return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(t){
+  root.setAttribute('data-theme', t);
+  localStorage.setItem(THEME_KEY, t);
+  // update theme-color meta
+  const meta = document.querySelector('meta[name="theme-color"]:not([media])');
+  if(meta) meta.setAttribute('content', t === 'dark' ? '#0f1419' : '#f7f8fa');
+  if(window.Chart) applyChartTheme();
+}
+
+themeBtn.addEventListener('click', ()=>{
+  applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+// Apply initial theme before charts render
+applyTheme(getInitialTheme());
+
+// React to OS theme change (if user hasn't manually overridden recently)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)=>{
+  // Always follow OS — keep simple
+  applyTheme(e.matches ? 'dark' : 'light');
+});
+
+// ============================================================
+// TABS
+// ============================================================
 document.querySelectorAll('#tabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-    // Resize charts when tab becomes visible
     Object.values(Chart.instances).forEach(c=>c.resize());
   });
 });
 
-// Common chart options - LIGHT THEME
-Chart.defaults.color = '#5b6478';
-Chart.defaults.borderColor = '#e3e6ec';
+// ============================================================
+// CHART.JS — defaults + theming
+// ============================================================
 Chart.defaults.font.family = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
-Chart.defaults.font.size = 12;
+Chart.defaults.font.size = 14;
 
+function chartColors(){
+  const dark = root.getAttribute('data-theme') === 'dark';
+  return {
+    text: dark ? '#a8b0bf' : '#5b6478',
+    textStrong: dark ? '#e8eaed' : '#1d2433',
+    grid: dark ? '#2d3548' : '#eef0f4',
+    doughnutBorder: dark ? '#1a1f2e' : '#ffffff',
+  };
+}
+
+function applyChartTheme(){
+  const c = chartColors();
+  Chart.defaults.color = c.text;
+  Chart.defaults.borderColor = c.grid;
+  Object.values(Chart.instances).forEach(chart=>{
+    if(chart.options.scales){
+      Object.values(chart.options.scales).forEach(scale=>{
+        if(scale.grid) scale.grid.color = c.grid;
+        if(scale.ticks) scale.ticks.color = c.text;
+        if(scale.title){ scale.title.color = c.text; }
+      });
+    }
+    if(chart.options.plugins && chart.options.plugins.legend){
+      chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+      chart.options.plugins.legend.labels.color = c.text;
+    }
+    if(chart.config.type === 'doughnut' || chart.config.type === 'pie'){
+      chart.data.datasets.forEach(ds=>{ ds.borderColor = c.doughnutBorder; });
+    }
+    chart.update('none');
+  });
+}
+
+// Set initial Chart defaults from current theme
+(function initChartDefaults(){
+  const c = chartColors();
+  Chart.defaults.color = c.text;
+  Chart.defaults.borderColor = c.grid;
+})();
+
+// Color palette
 const RED = '#dc2626', YELLOW = '#d97706', GRAY = '#9ca3af', GREEN = '#059669', BLUE = '#2563eb';
-const SOFT_RED = 'rgba(220,38,38,.7)', SOFT_YELLOW='rgba(217,119,6,.7)', SOFT_GRAY='rgba(156,163,175,.7)';
 
-// ========== Chart: All models ==========
+// ============================================================
+// DATA
+// ============================================================
 const allData = [
   {name:'BMW C 650 GT', cap:60, license:'red', status:'discontinued'},
   {name:'Honda Silver Wing 600', cap:55, license:'red', status:'never'},
@@ -704,8 +1026,13 @@ const allData = [
   {name:'Vespa GTS 300 (估)', cap:13, license:'yellow', status:'active'},
 ].sort((a,b)=>b.cap-a.cap);
 
-const licenseColor = (l)=> l==='red'?'rgba(220,38,38,.8)':l==='yellow'?'rgba(217,119,6,.8)':'rgba(107,114,128,.6)';
+const licenseColor = (l)=> l==='red'?'rgba(220,38,38,.85)':l==='yellow'?'rgba(217,119,6,.85)':'rgba(107,114,128,.7)';
+const statusColor = (s)=> s==='active'?GREEN: s==='discontinued'?YELLOW: GRAY;
+const initC = chartColors();
 
+// ============================================================
+// CHARTS
+// ============================================================
 new Chart(document.getElementById('chartAll'),{
   type:'bar',
   data:{
@@ -714,30 +1041,22 @@ new Chart(document.getElementById('chartAll'),{
       label:'座下車廂容積 (L)',
       data: allData.map(d=>d.cap),
       backgroundColor: allData.map(d=>licenseColor(d.license)),
-      borderColor: allData.map(d=>licenseColor(d.license).replace('.8','1').replace('.6','.9')),
+      borderColor: allData.map(d=>licenseColor(d.license).replace(/[.\d]+\)$/,'1)')),
       borderWidth:1,
       borderRadius:4
     }]
   },
   options:{
-    indexAxis:'y',
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{
-      legend:{display:false},
-      tooltip:{callbacks:{label:(c)=>`${c.parsed.x} L`}}
-    },
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x} L`}}},
     scales:{
-      x:{title:{display:true,text:'容積 (L)'},grid:{color:'#eef0f4'}},
-      y:{ticks:{font:{size:11}}}
+      x:{title:{display:true,text:'容積 (L)',color:initC.text},grid:{color:initC.grid},ticks:{color:initC.text}},
+      y:{ticks:{font:{size:13},color:initC.text},grid:{color:initC.grid}}
     }
   }
 });
 
-// ========== Chart: Red license only ==========
 const redData = allData.filter(d=>d.license==='red');
-const statusColor = (s)=> s==='active'?GREEN: s==='discontinued'?YELLOW: GRAY;
-
 new Chart(document.getElementById('chartRed'),{
   type:'bar',
   data:{
@@ -752,12 +1071,14 @@ new Chart(document.getElementById('chartRed'),{
   options:{
     indexAxis:'y',responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x} L`}}},
-    scales:{x:{title:{display:true,text:'容積 (L)'},grid:{color:'#eef0f4'}}}
+    scales:{
+      x:{title:{display:true,text:'容積 (L)',color:initC.text},grid:{color:initC.grid},ticks:{color:initC.text}},
+      y:{ticks:{color:initC.text},grid:{color:initC.grid}}
+    }
   }
 });
 
-// ========== Chart: Import scooters ==========
-const importData = allData.filter(d=>d.license==='white' || (d.license==='yellow'));
+const importData = allData.filter(d=>d.license==='white' || d.license==='yellow');
 new Chart(document.getElementById('chartImport'),{
   type:'bar',
   data:{
@@ -765,18 +1086,20 @@ new Chart(document.getElementById('chartImport'),{
     datasets:[{
       label:'座下車廂容積 (L)',
       data: importData.map(d=>d.cap),
-      backgroundColor: importData.map(d=> d.license==='yellow'?'rgba(217,119,6,.8)':'rgba(107,114,128,.7)'),
+      backgroundColor: importData.map(d=> d.license==='yellow'?'rgba(217,119,6,.85)':'rgba(107,114,128,.75)'),
       borderRadius:4
     }]
   },
   options:{
     indexAxis:'y',responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x} L`}}},
-    scales:{x:{title:{display:true,text:'容積 (L)'},grid:{color:'#eef0f4'}}}
+    scales:{
+      x:{title:{display:true,text:'容積 (L)',color:initC.text},grid:{color:initC.grid},ticks:{color:initC.text}},
+      y:{ticks:{color:initC.text},grid:{color:initC.grid}}
+    }
   }
 });
 
-// ========== Chart: Scatter price vs capacity ==========
 const scatterData = [
   {n:'KYMCO AK 550 Premium', p:380, c:33.15, l:'red'},
   {n:'KYMCO CV3', p:428, c:15.5, l:'red'},
@@ -797,7 +1120,6 @@ const scatterData = [
   {n:'Vespa Primavera 150', p:161, c:16.6, l:'white'},
   {n:'Vespa Sprint Tech', p:209, c:16.6, l:'white'},
 ];
-
 const groupBy = (l)=> scatterData.filter(d=>d.l===l).map(d=>({x:d.p, y:d.c, label:d.n}));
 
 new Chart(document.getElementById('chartScatter'),{
@@ -812,25 +1134,22 @@ new Chart(document.getElementById('chartScatter'),{
   options:{
     responsive:true,maintainAspectRatio:false,
     plugins:{
-      legend:{position:'top'},
-      tooltip:{callbacks:{label:(c)=>`${c.raw.label}：NT$${c.raw.x*1000}, ${c.raw.y} L`}}
+      legend:{position:'top',labels:{color:initC.text}},
+      tooltip:{callbacks:{label:c=>`${c.raw.label}：NT$${c.raw.x*1000}, ${c.raw.y} L`}}
     },
     scales:{
-      x:{title:{display:true,text:'售價 (NT$ 千)'},grid:{color:'#eef0f4'}},
-      y:{title:{display:true,text:'車廂容積 (L)'},grid:{color:'#eef0f4'}}
+      x:{title:{display:true,text:'售價 (NT$ 千)',color:initC.text},grid:{color:initC.grid},ticks:{color:initC.text}},
+      y:{title:{display:true,text:'車廂容積 (L)',color:initC.text},grid:{color:initC.grid},ticks:{color:initC.text}}
     }
   }
 });
 
-// ========== Chart: Brand distribution ==========
 const brandCount = {};
-[...allData].forEach(d=>{
+allData.forEach(d=>{
   const brand = d.name.split(' ')[0].replace(/（.*$/,'');
   brandCount[brand] = (brandCount[brand]||0)+1;
 });
-// merge minor
 const brandSorted = Object.entries(brandCount).sort((a,b)=>b[1]-a[1]);
-
 new Chart(document.getElementById('chartBrand'),{
   type:'doughnut',
   data:{
@@ -838,16 +1157,12 @@ new Chart(document.getElementById('chartBrand'),{
     datasets:[{
       data: brandSorted.map(b=>b[1]),
       backgroundColor:['#2563eb','#dc2626','#d97706','#059669','#8b5cf6','#0891b2','#db2777','#65a30d','#6366f1'],
-      borderWidth:2,borderColor:'#fff'
+      borderWidth:2,borderColor:initC.doughnutBorder
     }]
   },
-  options:{
-    responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{position:'right'}}
-  }
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:initC.text}}}}
 });
 
-// ========== Chart: License distribution ==========
 const licCount = {red:0,yellow:0,white:0};
 allData.forEach(d=>licCount[d.license]++);
 new Chart(document.getElementById('chartLicense'),{
@@ -857,13 +1172,12 @@ new Chart(document.getElementById('chartLicense'),{
     datasets:[{
       data:[licCount.red, licCount.yellow, licCount.white],
       backgroundColor:[RED,YELLOW,GRAY],
-      borderWidth:2,borderColor:'#fff'
+      borderWidth:2,borderColor:initC.doughnutBorder
     }]
   },
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:initC.text}}}}
 });
 
-// ========== Chart: Status ==========
 const statCount = {active:0,discontinued:0,never:0,gray:0};
 allData.forEach(d=>statCount[d.status]++);
 new Chart(document.getElementById('chartStatus'),{
@@ -880,9 +1194,15 @@ new Chart(document.getElementById('chartStatus'),{
   options:{
     responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false}},
-    scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#eef0f4'}}}
+    scales:{
+      y:{beginAtZero:true,ticks:{stepSize:1,color:initC.text},grid:{color:initC.grid}},
+      x:{ticks:{color:initC.text},grid:{color:initC.grid}}
+    }
   }
 });
+
+// Re-apply theme so charts pick up dark colors if started in dark
+applyChartTheme();
 </script>
 </body>
 </html>
