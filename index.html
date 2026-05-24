@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>買車囉 — 大羊速克達車廂容量完整分析（2026 年 5 月版）</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f7f8fa;
+    --surface:#ffffff;
+    --surface-2:#f1f3f7;
+    --border:#e3e6ec;
+    --text:#1d2433;
+    --text-soft:#5b6478;
+    --muted:#8a91a3;
+    --accent:#2563eb;
+    --accent-soft:#dbeafe;
+    --gold:#d97706;
+    --gold-soft:#fef3c7;
+    --green:#059669;
+    --green-soft:#d1fae5;
+    --red:#dc2626;
+    --red-soft:#fee2e2;
+    --shadow:0 1px 3px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.04);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    line-height:1.7;-webkit-font-smoothing:antialiased}
+  .container{max-width:1180px;margin:0 auto;padding:32px 24px 80px}
+
+  /* Header */
+  header.hero{background:linear-gradient(135deg,#ffffff 0%,#eef2ff 100%);
+    border:1px solid var(--border);border-radius:16px;padding:36px 36px;margin-bottom:32px;
+    box-shadow:var(--shadow)}
+  header.hero .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);
+    font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.5px;margin-bottom:12px}
+  header.hero h1{margin:0 0 10px;font-size:32px;font-weight:800;letter-spacing:-.5px}
+  header.hero .sub{margin:0;color:var(--text-soft);font-size:15px}
+  header.hero .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:18px;color:var(--muted);font-size:13px}
+  header.hero .meta span{display:inline-flex;align-items:center;gap:6px}
+
+  /* Section */
+  section{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:28px 32px;margin-bottom:24px;box-shadow:var(--shadow)}
+  section h2{margin:0 0 18px;font-size:22px;font-weight:700;padding-bottom:12px;
+    border-bottom:2px solid var(--accent-soft);display:flex;align-items:center;gap:10px}
+  section h2 .ico{width:30px;height:30px;background:var(--accent);color:#fff;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+  section h3{margin:24px 0 12px;font-size:17px;font-weight:700;color:var(--text)}
+
+  /* Cards / KPI */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:8px}
+  .kpi{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px}
+  .kpi .label{color:var(--text-soft);font-size:13px;margin-bottom:6px}
+  .kpi .value{font-size:24px;font-weight:800;color:var(--text)}
+  .kpi .unit{font-size:13px;color:var(--muted);margin-left:4px}
+  .kpi .sub{margin-top:4px;font-size:12px;color:var(--muted)}
+
+  /* TL;DR boxes */
+  .tldr{background:linear-gradient(135deg,#fff7ed 0%,#fff 100%);
+    border-left:4px solid var(--gold);border-radius:10px;padding:18px 20px;margin:8px 0 18px}
+  .tldr strong{color:var(--gold)}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin-bottom:6px}
+
+  /* Tables */
+  .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--surface)}
+  thead th{background:var(--surface-2);color:var(--text);font-weight:700;
+    padding:12px 10px;text-align:left;border-bottom:1px solid var(--border);
+    position:sticky;top:0;white-space:nowrap}
+  tbody td{padding:11px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tbody tr:hover{background:#fafbfd}
+  tbody tr:last-child td{border-bottom:none}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill-red{background:var(--red-soft);color:var(--red)}
+  .pill-yellow{background:var(--gold-soft);color:var(--gold)}
+  .pill-white{background:#e5e7eb;color:#374151}
+  .pill-green{background:var(--green-soft);color:var(--green)}
+  .pill-blue{background:var(--accent-soft);color:var(--accent)}
+  .star{color:var(--gold);font-weight:700}
+
+  /* Charts */
+  .chart-grid{display:grid;grid-template-columns:1fr;gap:24px}
+  .chart-grid.two{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+  .chart-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .chart-card h4{margin:0 0 14px;font-size:15px;font-weight:700;color:var(--text)}
+  .chart-card .note{margin-top:10px;color:var(--muted);font-size:12px}
+  .chart-box{position:relative;height:380px}
+  .chart-box.tall{height:560px}
+
+  /* Detail blocks */
+  .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:12px}
+  .detail-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;
+    padding:18px;position:relative;overflow:hidden}
+  .detail-card .rank{position:absolute;top:14px;right:16px;font-size:13px;
+    color:var(--muted);font-weight:700}
+  .detail-card h4{margin:0 0 4px;font-size:16px;font-weight:700}
+  .detail-card .brand{font-size:12px;color:var(--text-soft);margin-bottom:10px}
+  .detail-card .stat-row{display:flex;justify-content:space-between;padding:6px 0;
+    border-top:1px dashed var(--border);font-size:13.5px}
+  .detail-card .stat-row span:first-child{color:var(--text-soft)}
+  .detail-card .stat-row span:last-child{font-weight:600}
+
+  /* Reco / Caveats */
+  .reco{background:linear-gradient(135deg,#ecfdf5 0%,#fff 100%);border-left:4px solid var(--green);
+    padding:14px 18px;border-radius:10px;margin-bottom:12px}
+  .reco strong{color:var(--green)}
+  .caveat{background:linear-gradient(135deg,#fef2f2 0%,#fff 100%);border-left:4px solid var(--red);
+    padding:14px 18px;border-radius:10px;margin-bottom:10px}
+  .caveat strong{color:var(--red)}
+
+  /* Tabs */
+  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border)}
+  .tabs button{background:transparent;border:none;padding:10px 18px;font-size:14px;font-weight:600;
+    color:var(--text-soft);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit}
+  .tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;padding:20px}
+  footer a{color:var(--accent);text-decoration:none}
+
+  @media (max-width:720px){
+    .container{padding:16px}
+    header.hero{padding:24px}
+    header.hero h1{font-size:24px}
+    section{padding:20px}
+    .chart-grid.two{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HERO -->
+  <header class="hero">
+    <span class="tag">2026 年 5 月版 · 台灣市場</span>
+    <h1>買車囉 — 大羊速克達車廂容量完整分析</h1>
+    <p class="sub">涵蓋紅牌 550cc+ 與進口大羊（白牌 150cc+ / 黃牌 250–350cc），以「座下車廂容積」為核心決策變數的完整比較與選車建議。</p>
+    <div class="meta">
+      <span>共比較 <strong>22 款</strong>車型</span>
+      <span>資料截止 <strong>2026-05</strong></span>
+      <span>來源 <strong>13+ 家媒體與原廠</strong></span>
+    </div>
+  </header>
+
+  <!-- 快速重點 -->
+  <section>
+    <h2><span class="ico">★</span>快速重點 (TL;DR)</h2>
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="label">全級距車廂之王</div>
+        <div class="value">60<span class="unit">L</span></div>
+        <div class="sub">BMW C 650 GT（已停產 · 二手）</div>
+      </div>
+      <div class="kpi">
+        <div class="label">現役新車車廂冠軍（紅牌）</div>
+        <div class="value">33.15<span class="unit">L</span></div>
+        <div class="sub">KYMCO AK 550 Premium · NT$376,000</div>
+      </div>
+      <div class="kpi">
+        <div class="label">黃牌大羊車廂冠軍</div>
+        <div class="value">48<span class="unit">L</span></div>
+        <div class="sub">HONDA Forza 350 · NT$258,000</div>
+      </div>
+      <div class="kpi">
+        <div class="label">白牌大羊車廂冠軍</div>
+        <div class="value">30<span class="unit">L</span></div>
+        <div class="sub">HONDA PCX 160 / ADV 160（貿易商）</div>
+      </div>
+    </div>
+
+    <div class="tldr">
+      <strong>紅牌 (550cc+) 結論：</strong>
+      <ul>
+        <li>歷史最大車廂：<strong>BMW C 650 GT 60 L</strong>（可放兩頂全罩，已停產，只能買庫存末代或全新二手）。</li>
+        <li>現役新車冠軍：<strong>KYMCO AK 550 Premium 33.15 L</strong>（光陽國產，全台 KYMCO 經銷皆可購買）。</li>
+        <li>台灣現役新車只剩 5 款：AK 550 Premium / CV3、TMAX 560 / Tech MAX、Forza 750、X-ADV 750。</li>
+      </ul>
+    </div>
+
+    <div class="tldr">
+      <strong>進口大羊 (150–350cc) 結論：</strong>
+      <ul>
+        <li>車廂之王：<strong>HONDA Forza 350 (48 L)</strong> 與 <strong>YAMAHA XMAX 300 (45 L)</strong>，皆可放兩頂全罩。</li>
+        <li>2025/7 國產化 XMAX 300（NT$238,000）打破「進口大羊高價」格局，是目前 CP 值最高的合法黃牌大羊。</li>
+        <li>白牌首選 <strong>YAMAHA NMAX 155 (28.9 L)</strong>，CP 值最高且有總代理保固。</li>
+        <li><strong>「150–249cc 紅牌」是誤稱</strong>：250–549cc 才是黃牌，550cc+ 才是紅牌。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 圖表分析 -->
+  <section>
+    <h2><span class="ico">📊</span>圖表分析</h2>
+
+    <div class="tabs" id="tabs">
+      <button class="active" data-tab="all">全車款排名</button>
+      <button data-tab="red">紅牌 550cc+</button>
+      <button data-tab="import">進口大羊</button>
+      <button data-tab="scatter">價格 vs 車廂</button>
+      <button data-tab="dist">分類分布</button>
+    </div>
+
+    <!-- Tab: All -->
+    <div class="tab-panel active" id="tab-all">
+      <div class="chart-card">
+        <h4>全車款座下車廂容積排名（橫向長條圖，22 款）</h4>
+        <div class="chart-box tall"><canvas id="chartAll"></canvas></div>
+        <p class="note">深紅 = 紅牌 (550cc+)；橘黃 = 黃牌 (250–549cc)；灰色 = 白牌 (≤249cc)。BMW C 600/650 Sport 採用 FlexCase 行進時收回的真實值 30 L。</p>
+      </div>
+    </div>
+
+    <!-- Tab: Red -->
+    <div class="tab-panel" id="tab-red">
+      <div class="chart-card">
+        <h4>紅牌 550cc+ 速克達車廂容積比較</h4>
+        <div class="chart-box"><canvas id="chartRed"></canvas></div>
+        <p class="note">綠色 = 台灣現役總代理販售；黃色 = 已停產但有二手；灰色 = 未引進。</p>
+      </div>
+    </div>
+
+    <!-- Tab: Import -->
+    <div class="tab-panel" id="tab-import">
+      <div class="chart-card">
+        <h4>進口大羊 (白牌+黃牌) 車廂容積比較</h4>
+        <div class="chart-box"><canvas id="chartImport"></canvas></div>
+        <p class="note">資料來自 Honda / Yamaha / Aprilia / Vespa 官方規格與媒體實測。Vespa Primavera / Sprint 沿用 2015 年同平台 16.6 L 數據。</p>
+      </div>
+    </div>
+
+    <!-- Tab: Scatter -->
+    <div class="tab-panel" id="tab-scatter">
+      <div class="chart-card">
+        <h4>價格 vs 車廂容積散布圖（CP 值地圖）</h4>
+        <div class="chart-box tall"><canvas id="chartScatter"></canvas></div>
+        <p class="note">越靠近左上角 = 越便宜且車廂越大；越靠近右下角 = 越貴卻車廂越小。售價皆為總代理新車或貿易商常見開價（NT$）。</p>
+      </div>
+    </div>
+
+    <!-- Tab: Distribution -->
+    <div class="tab-panel" id="tab-dist">
+      <div class="chart-grid two">
+        <div class="chart-card">
+          <h4>按廠牌分布（全 22 款）</h4>
+          <div class="chart-box"><canvas id="chartBrand"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h4>按牌照分類分布</h4>
+          <div class="chart-box"><canvas id="chartLicense"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-top:24px">
+        <h4>台灣引進狀態</h4>
+        <div class="chart-box"><canvas id="chartStatus"></canvas></div>
+        <p class="note">總代理現役 = 可直接到展間下訂；停產 / 二手 = 只剩末代庫存或中古車源；未引進 = 僅貿易商或水貨。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 紅牌完整表 -->
+  <section>
+    <h2><span class="ico">🏍</span>紅牌 (550cc+) 完整車型表</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>廠牌 / 型號</th>
+            <th>排氣量</th>
+            <th>量產年份</th>
+            <th>座下車廂</th>
+            <th>額外置物</th>
+            <th>台灣狀態</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>BMW C 650 GT</strong></td>
+            <td>647 cc 並列雙缸</td>
+            <td>2012–2020</td>
+            <td><span class="star">★ 60 L</span>（兩頂全罩，業界最大）</td>
+            <td>前儀錶下左、右手套箱</td>
+            <td><span class="pill pill-yellow">已停產</span> 汎德曾總代理；二手充裕</td>
+          </tr>
+          <tr>
+            <td><strong>BMW C 600/650 Sport</strong></td>
+            <td>647 cc 並列雙缸</td>
+            <td>2012–2020</td>
+            <td>行進約 30 L；停車 FlexCase 60 L</td>
+            <td>前左右手套箱</td>
+            <td><span class="pill pill-yellow">已停產</span> 汎德曾總代理</td>
+          </tr>
+          <tr>
+            <td><strong>Suzuki Burgman 650</strong></td>
+            <td>638 cc 並列雙缸</td>
+            <td>2002–2018</td>
+            <td><span class="star">50 L</span> (2013+) / <span class="star">55 L</span> (早期)</td>
+            <td>前右 5.2 L + 前左 1.3 L</td>
+            <td><span class="pill pill-yellow">已停售</span> 台鈴 2018 後不進</td>
+          </tr>
+          <tr>
+            <td><strong>Honda Silver Wing 600</strong></td>
+            <td>582 cc 並列雙缸</td>
+            <td>2001–2016</td>
+            <td><span class="star">55 L</span>（兩頂全罩）</td>
+            <td>前左 6 L 可上鎖 + 前右 1.5 L</td>
+            <td><span class="pill pill-white">未引進</span> 水貨稀少</td>
+          </tr>
+          <tr>
+            <td><strong>Honda Integra 750</strong></td>
+            <td>745 cc 並列雙缸 + DCT</td>
+            <td>2012–2020</td>
+            <td>約 15 L（油箱在坐墊下）</td>
+            <td>前小型置物</td>
+            <td><span class="pill pill-white">未引進</span> 水貨稀少</td>
+          </tr>
+          <tr>
+            <td><strong>Honda Forza 750</strong></td>
+            <td>745 cc 並列雙缸 + DCT</td>
+            <td>2021–</td>
+            <td>22 L（一頂全罩）</td>
+            <td>前小型手套箱</td>
+            <td><span class="pill pill-green">現役總代理</span> NT$468,000</td>
+          </tr>
+          <tr>
+            <td><strong>Honda X-ADV 750</strong></td>
+            <td>745 cc 並列雙缸 + DCT</td>
+            <td>2017–</td>
+            <td>約 22 L</td>
+            <td>前小手套箱</td>
+            <td><span class="pill pill-green">現役總代理</span> NT$498,000</td>
+          </tr>
+          <tr>
+            <td><strong>Yamaha TMAX 530（一代）</strong></td>
+            <td>530 cc 並列雙缸</td>
+            <td>2012–2019</td>
+            <td><span class="star">42 L</span>（一頂全罩+小物）</td>
+            <td>前左側手套箱</td>
+            <td><span class="pill pill-yellow">已停售</span> 二手豐富</td>
+          </tr>
+          <tr>
+            <td><strong>Yamaha TMAX 560（二代）</strong></td>
+            <td>562 cc 並列雙缸</td>
+            <td>2020–</td>
+            <td>26 L（較 530 縮減）</td>
+            <td>前左側手套箱含 USB</td>
+            <td><span class="pill pill-green">現役總代理</span> NT$535,000/565,000</td>
+          </tr>
+          <tr>
+            <td><strong>KYMCO AK 550 Premium</strong></td>
+            <td>550 cc 並列雙缸</td>
+            <td>2017–2024</td>
+            <td><span class="star">★ 33.15 L</span>（現役新車最大）</td>
+            <td>前右側手套箱含 USB</td>
+            <td><span class="pill pill-green">現役總代理</span> NT$376,000–388,000</td>
+          </tr>
+          <tr>
+            <td><strong>KYMCO AK 575 (2026 接替)</strong></td>
+            <td>574.2 cc 並列雙缸 Euro 5+</td>
+            <td>2025 發表</td>
+            <td>同 AK 550 等級</td>
+            <td>USB-C</td>
+            <td><span class="pill pill-blue">即將上市</span> 售價未公佈</td>
+          </tr>
+          <tr>
+            <td><strong>KYMCO CV3（三輪）</strong></td>
+            <td>550.4 cc 並列雙缸</td>
+            <td>2021–</td>
+            <td>15.5 L（前懸吊壓縮）</td>
+            <td>前左小手套箱 + USB</td>
+            <td><span class="pill pill-green">現役總代理</span> NT$428,000</td>
+          </tr>
+          <tr>
+            <td><strong>Aprilia SRV 850</strong></td>
+            <td>839 cc 90° V-Twin</td>
+            <td>2012–2019</td>
+            <td>16 L（一頂全罩剛好）</td>
+            <td><strong>無前手套箱</strong></td>
+            <td><span class="pill pill-yellow">已停售</span> 摩托之星曾代理</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 進口大羊完整表 -->
+  <section>
+    <h2><span class="ico">🛵</span>進口大羊 (150–350cc) 完整車型表</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>車廠</th>
+            <th>型號</th>
+            <th>牌照</th>
+            <th>排氣量</th>
+            <th>座下車廂</th>
+            <th>全新台灣售價</th>
+            <th>取得方式</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>HONDA</strong></td>
+            <td>Forza 350</td>
+            <td><span class="pill pill-yellow">黃牌</span></td>
+            <td>330 cc</td>
+            <td><span class="star">★ 48 L</span>（兩頂全罩）</td>
+            <td>NT$258,000</td>
+            <td><span class="pill pill-green">台灣本田總代理</span></td>
+          </tr>
+          <tr>
+            <td><strong>YAMAHA</strong></td>
+            <td>XMAX 300（進口）</td>
+            <td><span class="pill pill-yellow">黃牌</span></td>
+            <td>292 cc</td>
+            <td><span class="star">45 L</span>（三段式 + LED）</td>
+            <td>NT$259,000</td>
+            <td><span class="pill pill-green">台灣山葉總代理</span></td>
+          </tr>
+          <tr>
+            <td><strong>YAMAHA</strong></td>
+            <td>XMAX 300（國產化）</td>
+            <td><span class="pill pill-yellow">黃牌</span></td>
+            <td>292 cc</td>
+            <td><span class="star">45 L</span></td>
+            <td><strong>NT$238,000</strong></td>
+            <td><span class="pill pill-green">台灣山葉 YMS</span></td>
+          </tr>
+          <tr>
+            <td><strong>HONDA</strong></td>
+            <td>PCX 160</td>
+            <td><span class="pill pill-white">白牌</span></td>
+            <td>156 cc</td>
+            <td>30 L</td>
+            <td>NT$120,000–135,000</td>
+            <td><span class="pill pill-yellow">僅貿易商</span></td>
+          </tr>
+          <tr>
+            <td><strong>HONDA</strong></td>
+            <td>ADV 160</td>
+            <td><span class="pill pill-white">白牌</span></td>
+            <td>157 cc</td>
+            <td>30 L</td>
+            <td>NT$165,000–171,000</td>
+            <td><span class="pill pill-yellow">僅貿易商</span></td>
+          </tr>
+          <tr>
+            <td><strong>YAMAHA</strong></td>
+            <td>NMAX 155（第三代）</td>
+            <td><span class="pill pill-white">白牌</span></td>
+            <td>155 cc</td>
+            <td><span class="star">28.9 L</span></td>
+            <td>NT$118,000–137,000</td>
+            <td><span class="pill pill-green">台灣山葉總代理</span></td>
+          </tr>
+          <tr>
+            <td><strong>Aprilia</strong></td>
+            <td>SR GT 200 / Sport</td>
+            <td><span class="pill pill-white">白牌</span></td>
+            <td>174 cc</td>
+            <td>25 L</td>
+            <td>NT$166,000–169,000</td>
+            <td><span class="pill pill-green">摩托之星</span></td>
+          </tr>
+          <tr>
+            <td><strong>Vespa</strong></td>
+            <td>Primavera 150</td>
+            <td><span class="pill pill-white">白牌</span></td>
+            <td>154 cc</td>
+            <td>約 16.6 L</td>
+            <td>NT$161,000–171,000</td>
+            <td><span class="pill pill-green">太古運通</span></td>
+          </tr>
+          <tr>
+            <td><strong>Vespa</strong></td>
+            <td>Sprint 150 / Tech</td>
+            <td><span class="pill pill-white">白牌</span></td>
+            <td>155 cc</td>
+            <td>約 16.6 L</td>
+            <td>NT$209,000 起</td>
+            <td><span class="pill pill-green">太古運通</span></td>
+          </tr>
+          <tr>
+            <td><strong>Vespa</strong></td>
+            <td>GTS 300 Classic</td>
+            <td><span class="pill pill-yellow">黃牌</span></td>
+            <td>278 cc</td>
+            <td>未公布（小）</td>
+            <td>NT$309,000</td>
+            <td><span class="pill pill-green">太古運通</span></td>
+          </tr>
+          <tr>
+            <td><strong>Vespa</strong></td>
+            <td>GTS 300 Super Sport</td>
+            <td><span class="pill pill-yellow">黃牌</span></td>
+            <td>278 cc</td>
+            <td>未公布（小）</td>
+            <td>NT$335,000</td>
+            <td><span class="pill pill-green">太古運通</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 重點車款細節 -->
+  <section>
+    <h2><span class="ico">🔍</span>重點車款深度細節</h2>
+
+    <h3>紅牌現役新車主力</h3>
+    <div class="detail-grid">
+      <div class="detail-card">
+        <span class="rank">#1 現役新車車廂</span>
+        <h4>KYMCO AK 550 Premium</h4>
+        <div class="brand">光陽 · 2022 改款 · 末代</div>
+        <div class="stat-row"><span>引擎</span><span>550.4 cc 雙缸 52 ps</span></div>
+        <div class="stat-row"><span>車廂</span><span>33.15 L (全罩+半罩)</span></div>
+        <div class="stat-row"><span>新車</span><span>NT$376,000–388,000</span></div>
+        <div class="stat-row"><span>二手 (22–23 年)</span><span>NT$320,000–360,000</span></div>
+        <div class="stat-row"><span>備註</span><span>2026 由 AK 575 接替</span></div>
+      </div>
+      <div class="detail-card">
+        <span class="rank">運動性能首選</span>
+        <h4>Yamaha TMAX 560 / Tech MAX</h4>
+        <div class="brand">山葉 · 二代 562 cc</div>
+        <div class="stat-row"><span>引擎</span><span>562 cc 雙缸 47.6 ps</span></div>
+        <div class="stat-row"><span>車廂</span><span>26 L（比 530 縮水）</span></div>
+        <div class="stat-row"><span>新車</span><span>NT$535,000 / 565,000</span></div>
+        <div class="stat-row"><span>二手 (22 年)</span><span>NT$388,000–479,000</span></div>
+        <div class="stat-row"><span>備註</span><span>性能、操控、保值最強</span></div>
+      </div>
+      <div class="detail-card">
+        <span class="rank">DCT 自手排獨家</span>
+        <h4>Honda Forza 750</h4>
+        <div class="brand">本田 · 2021–</div>
+        <div class="stat-row"><span>引擎</span><span>745 cc 雙缸 + 6 速 DCT</span></div>
+        <div class="stat-row"><span>車廂</span><span>22 L（一頂全罩）</span></div>
+        <div class="stat-row"><span>新車</span><span>NT$468,000</span></div>
+        <div class="stat-row"><span>二手</span><span>NT$298,000–398,000</span></div>
+        <div class="stat-row"><span>備註</span><span>建議搭 50 L 後行李箱</span></div>
+      </div>
+      <div class="detail-card">
+        <span class="rank">★ 歷史最大車廂</span>
+        <h4>BMW C 650 GT（停產）</h4>
+        <div class="brand">BMW Motorrad · 2012–2020</div>
+        <div class="stat-row"><span>引擎</span><span>647 cc 雙缸 60 hp</span></div>
+        <div class="stat-row"><span>車廂</span><span>60 L（兩頂全罩）</span></div>
+        <div class="stat-row"><span>新車原價</span><span>NT$579,000–629,000</span></div>
+        <div class="stat-row"><span>二手 (18–20 年)</span><span>NT$398,000–540,000</span></div>
+        <div class="stat-row"><span>備註</span><span>加溫坐墊+電動風鏡標配</span></div>
+      </div>
+    </div>
+
+    <h3>進口大羊推薦車款</h3>
+    <div class="detail-grid">
+      <div class="detail-card">
+        <span class="rank">★ 黃牌車廂之王</span>
+        <h4>HONDA Forza 350</h4>
+        <div class="brand">台灣本田 · 2025 年式</div>
+        <div class="stat-row"><span>排氣量</span><span>330 cc</span></div>
+        <div class="stat-row"><span>車廂</span><span>48 L（兩頂全罩 + 隔板）</span></div>
+        <div class="stat-row"><span>新車</span><span>NT$258,000（降 2 萬）</span></div>
+        <div class="stat-row"><span>二手 (22–23)</span><span>NT$200,000–230,000</span></div>
+        <div class="stat-row"><span>備註</span><span>內部照明、USB-C</span></div>
+      </div>
+      <div class="detail-card">
+        <span class="rank">★ CP 值最高黃牌</span>
+        <h4>YAMAHA XMAX 300 國產化</h4>
+        <div class="brand">台灣山葉 · 2025/7 上市</div>
+        <div class="stat-row"><span>排氣量</span><span>292 cc</span></div>
+        <div class="stat-row"><span>車廂</span><span>45 L（三段式）</span></div>
+        <div class="stat-row"><span>新車</span><span>NT$238,000</span></div>
+        <div class="stat-row"><span>儀表</span><span>4.2" TFT + 3.2" LCD</span></div>
+        <div class="stat-row"><span>備註</span><span>電動風鏡 · 比進口便宜 2.1 萬</span></div>
+      </div>
+      <div class="detail-card">
+        <span class="rank">白牌 CP 值之王</span>
+        <h4>YAMAHA NMAX 155（第三代）</h4>
+        <div class="brand">台灣山葉 · 2025 年式</div>
+        <div class="stat-row"><span>排氣量</span><span>155 cc</span></div>
+        <div class="stat-row"><span>車廂</span><span>28.9 L</span></div>
+        <div class="stat-row"><span>新車</span><span>NT$118,000–137,000</span></div>
+        <div class="stat-row"><span>二手 (20–23)</span><span>NT$60,000–95,000</span></div>
+        <div class="stat-row"><span>備註</span><span>前左可放寶特瓶</span></div>
+      </div>
+      <div class="detail-card">
+        <span class="rank">造型品牌溢價</span>
+        <h4>Vespa GTS 300 Classic</h4>
+        <div class="brand">太古運通 · 義大利</div>
+        <div class="stat-row"><span>排氣量</span><span>278 cc</span></div>
+        <div class="stat-row"><span>車廂</span><span>未公布（同級最小）</span></div>
+        <div class="stat-row"><span>新車</span><span>NT$309,000</span></div>
+        <div class="stat-row"><span>二手</span><span>NT$220,000–280,000</span></div>
+        <div class="stat-row"><span>備註</span><span>強烈建議加裝原廠後箱</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 建議 -->
+  <section>
+    <h2><span class="ico">💡</span>選車建議（依「車廂優先」決策）</h2>
+
+    <h3>紅牌 550cc+ 推薦路徑</h3>
+    <div class="reco">
+      <strong>階段 1 · 全新二手 / 庫存末代可接受：</strong>首選 <strong>BMW C 650 GT (60 L)</strong> — 找 2018–2020 汎德總代理車，NT$400,000–550,000；次選 <strong>Suzuki Burgman 650 (50–55 L)</strong>，預算 NT$100,000–200,000 可入手。
+    </div>
+    <div class="reco">
+      <strong>階段 2 · 必須全新車 + 總代理保固：</strong><strong>KYMCO AK 550 Premium (33.15 L, NT$376,000)</strong> 為現役新車車廂之王，現在是「入手末代」與「等 AK 575」的決策節點。
+    </div>
+    <div class="reco">
+      <strong>避免清單：</strong>KYMCO CV3 (15.5 L)、Aprilia SRV 850 (16 L)、Honda Integra 750 (~15 L) — 若車廂是優先變數，這三台都只能放一頂全罩。
+    </div>
+
+    <h3>進口大羊推薦路徑</h3>
+    <div class="reco">
+      <strong>有大型重機駕照、預算 22 萬以上：</strong>優先 <strong>Forza 350 (48 L, NT$258,000)</strong> 或 <strong>國產化 XMAX 300 (45 L, NT$238,000)</strong>，車廂與路權全面碾壓白牌。
+    </div>
+    <div class="reco">
+      <strong>無大型重機駕照、預算 13–17 萬：</strong><strong>YAMAHA NMAX 155 (28.9 L)</strong>，車廂、售價、保固三者最佳平衡。
+    </div>
+    <div class="reco">
+      <strong>觀察門檻：</strong>若 Forza 350 降至 NT$240,000 以下、或 XMAX 300 國產實際成交 NT$220,000 以下 → 立即入手。
+    </div>
+  </section>
+
+  <!-- 注意事項 -->
+  <section>
+    <h2><span class="ico">⚠</span>注意事項與資料說明</h2>
+
+    <div class="caveat">
+      <strong>「紅牌」定義誤用：</strong>150–249cc 在台灣是「白牌」，不是紅牌。250–549cc 才是黃牌、550cc+ 才是紅牌。
+    </div>
+    <div class="caveat">
+      <strong>TMAX 560 車廂縮水：</strong>第一代 TMAX 530 為 42 L，二代 560 縮減至 26 L。若從 530 換 560 要有心理準備。
+    </div>
+    <div class="caveat">
+      <strong>BMW C 600/650 Sport FlexCase 行進時須收起：</strong>60 L 為靜態值，實際行進約 30 L。
+    </div>
+    <div class="caveat">
+      <strong>Vespa 車廂數據限制：</strong>Primavera/Sprint 16.6 L 數字來自 2015 年同平台發表會，現行年式未重新公告；GTS 300 在台/義媒體均無公升數據。
+    </div>
+    <div class="caveat">
+      <strong>PCX 160 / ADV 160 並非台本正式引進：</strong>全為貿易商水貨，保固、回廠、零件供應均不同於總代理。
+    </div>
+    <div class="caveat">
+      <strong>水貨稀有零件風險：</strong>Honda Silver Wing 600、Integra 750、Aprilia SRV 850 等，購入前要先確認車行能否取得引擎相關料件。
+    </div>
+  </section>
+
+  <footer>
+    資料整理日期 2026-05-23 · 資料來源 Supermoto8、ETtoday、TVBS、U-CAR、Mobile01、Webike、BigGo、Carousell、Bennetts、MCN、Motorcycle.com、Honda Powersports Newsroom、BMW Motorrad 等
+  </footer>
+
+</div>
+
+<script>
+// ========== Tabs ==========
+document.querySelectorAll('#tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    // Resize charts when tab becomes visible
+    Object.values(Chart.instances).forEach(c=>c.resize());
+  });
+});
+
+// Common chart options - LIGHT THEME
+Chart.defaults.color = '#5b6478';
+Chart.defaults.borderColor = '#e3e6ec';
+Chart.defaults.font.family = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+Chart.defaults.font.size = 12;
+
+const RED = '#dc2626', YELLOW = '#d97706', GRAY = '#9ca3af', GREEN = '#059669', BLUE = '#2563eb';
+const SOFT_RED = 'rgba(220,38,38,.7)', SOFT_YELLOW='rgba(217,119,6,.7)', SOFT_GRAY='rgba(156,163,175,.7)';
+
+// ========== Chart: All models ==========
+const allData = [
+  {name:'BMW C 650 GT', cap:60, license:'red', status:'discontinued'},
+  {name:'Honda Silver Wing 600', cap:55, license:'red', status:'never'},
+  {name:'Suzuki Burgman 650', cap:50, license:'red', status:'discontinued'},
+  {name:'HONDA Forza 350', cap:48, license:'yellow', status:'active'},
+  {name:'YAMAHA XMAX 300', cap:45, license:'yellow', status:'active'},
+  {name:'Yamaha TMAX 530（一代）', cap:42, license:'red', status:'discontinued'},
+  {name:'KYMCO AK 550 Premium', cap:33.15, license:'red', status:'active'},
+  {name:'BMW C 650 Sport (行進)', cap:30, license:'red', status:'discontinued'},
+  {name:'HONDA PCX 160', cap:30, license:'white', status:'gray'},
+  {name:'HONDA ADV 160', cap:30, license:'white', status:'gray'},
+  {name:'YAMAHA NMAX 155', cap:28.9, license:'white', status:'active'},
+  {name:'Yamaha TMAX 560（二代）', cap:26, license:'red', status:'active'},
+  {name:'Aprilia SR GT 200', cap:25, license:'white', status:'active'},
+  {name:'Honda Forza 750', cap:22, license:'red', status:'active'},
+  {name:'Honda X-ADV 750', cap:22, license:'red', status:'active'},
+  {name:'Vespa Primavera/Sprint 150', cap:16.6, license:'white', status:'active'},
+  {name:'Aprilia SRV 850', cap:16, license:'red', status:'discontinued'},
+  {name:'KYMCO CV3', cap:15.5, license:'red', status:'active'},
+  {name:'Honda Integra 750', cap:15, license:'red', status:'never'},
+  {name:'Vespa GTS 300 (估)', cap:13, license:'yellow', status:'active'},
+].sort((a,b)=>b.cap-a.cap);
+
+const licenseColor = (l)=> l==='red'?'rgba(220,38,38,.8)':l==='yellow'?'rgba(217,119,6,.8)':'rgba(107,114,128,.6)';
+
+new Chart(document.getElementById('chartAll'),{
+  type:'bar',
+  data:{
+    labels: allData.map(d=>d.name),
+    datasets:[{
+      label:'座下車廂容積 (L)',
+      data: allData.map(d=>d.cap),
+      backgroundColor: allData.map(d=>licenseColor(d.license)),
+      borderColor: allData.map(d=>licenseColor(d.license).replace('.8','1').replace('.6','.9')),
+      borderWidth:1,
+      borderRadius:4
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:(c)=>`${c.parsed.x} L`}}
+    },
+    scales:{
+      x:{title:{display:true,text:'容積 (L)'},grid:{color:'#eef0f4'}},
+      y:{ticks:{font:{size:11}}}
+    }
+  }
+});
+
+// ========== Chart: Red license only ==========
+const redData = allData.filter(d=>d.license==='red');
+const statusColor = (s)=> s==='active'?GREEN: s==='discontinued'?YELLOW: GRAY;
+
+new Chart(document.getElementById('chartRed'),{
+  type:'bar',
+  data:{
+    labels: redData.map(d=>d.name),
+    datasets:[{
+      label:'座下車廂容積 (L)',
+      data: redData.map(d=>d.cap),
+      backgroundColor: redData.map(d=>statusColor(d.status)),
+      borderRadius:4
+    }]
+  },
+  options:{
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x} L`}}},
+    scales:{x:{title:{display:true,text:'容積 (L)'},grid:{color:'#eef0f4'}}}
+  }
+});
+
+// ========== Chart: Import scooters ==========
+const importData = allData.filter(d=>d.license==='white' || (d.license==='yellow'));
+new Chart(document.getElementById('chartImport'),{
+  type:'bar',
+  data:{
+    labels: importData.map(d=>d.name),
+    datasets:[{
+      label:'座下車廂容積 (L)',
+      data: importData.map(d=>d.cap),
+      backgroundColor: importData.map(d=> d.license==='yellow'?'rgba(217,119,6,.8)':'rgba(107,114,128,.7)'),
+      borderRadius:4
+    }]
+  },
+  options:{
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x} L`}}},
+    scales:{x:{title:{display:true,text:'容積 (L)'},grid:{color:'#eef0f4'}}}
+  }
+});
+
+// ========== Chart: Scatter price vs capacity ==========
+const scatterData = [
+  {n:'KYMCO AK 550 Premium', p:380, c:33.15, l:'red'},
+  {n:'KYMCO CV3', p:428, c:15.5, l:'red'},
+  {n:'TMAX 560', p:535, c:26, l:'red'},
+  {n:'TMAX Tech MAX', p:565, c:26, l:'red'},
+  {n:'Honda Forza 750', p:468, c:22, l:'red'},
+  {n:'Honda X-ADV 750', p:498, c:22, l:'red'},
+  {n:'BMW C 650 GT (新車原價)', p:629, c:60, l:'red'},
+  {n:'HONDA Forza 350', p:258, c:48, l:'yellow'},
+  {n:'YAMAHA XMAX 300 進口', p:259, c:45, l:'yellow'},
+  {n:'YAMAHA XMAX 300 國產', p:238, c:45, l:'yellow'},
+  {n:'Vespa GTS 300 Classic', p:309, c:13, l:'yellow'},
+  {n:'Vespa GTS 300 Super Sport', p:335, c:13, l:'yellow'},
+  {n:'YAMAHA NMAX 155', p:128, c:28.9, l:'white'},
+  {n:'HONDA PCX 160 (貿)', p:128, c:30, l:'white'},
+  {n:'HONDA ADV 160 (貿)', p:168, c:30, l:'white'},
+  {n:'Aprilia SR GT 200', p:167, c:25, l:'white'},
+  {n:'Vespa Primavera 150', p:161, c:16.6, l:'white'},
+  {n:'Vespa Sprint Tech', p:209, c:16.6, l:'white'},
+];
+
+const groupBy = (l)=> scatterData.filter(d=>d.l===l).map(d=>({x:d.p, y:d.c, label:d.n}));
+
+new Chart(document.getElementById('chartScatter'),{
+  type:'scatter',
+  data:{
+    datasets:[
+      {label:'紅牌 (550cc+)', data:groupBy('red'), backgroundColor:RED, borderColor:RED, pointRadius:7, pointHoverRadius:10},
+      {label:'黃牌 (250–549cc)', data:groupBy('yellow'), backgroundColor:YELLOW, borderColor:YELLOW, pointRadius:7, pointHoverRadius:10},
+      {label:'白牌 (≤249cc)', data:groupBy('white'), backgroundColor:GRAY, borderColor:GRAY, pointRadius:7, pointHoverRadius:10},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top'},
+      tooltip:{callbacks:{label:(c)=>`${c.raw.label}：NT$${c.raw.x*1000}, ${c.raw.y} L`}}
+    },
+    scales:{
+      x:{title:{display:true,text:'售價 (NT$ 千)'},grid:{color:'#eef0f4'}},
+      y:{title:{display:true,text:'車廂容積 (L)'},grid:{color:'#eef0f4'}}
+    }
+  }
+});
+
+// ========== Chart: Brand distribution ==========
+const brandCount = {};
+[...allData].forEach(d=>{
+  const brand = d.name.split(' ')[0].replace(/（.*$/,'');
+  brandCount[brand] = (brandCount[brand]||0)+1;
+});
+// merge minor
+const brandSorted = Object.entries(brandCount).sort((a,b)=>b[1]-a[1]);
+
+new Chart(document.getElementById('chartBrand'),{
+  type:'doughnut',
+  data:{
+    labels: brandSorted.map(b=>b[0]),
+    datasets:[{
+      data: brandSorted.map(b=>b[1]),
+      backgroundColor:['#2563eb','#dc2626','#d97706','#059669','#8b5cf6','#0891b2','#db2777','#65a30d','#6366f1'],
+      borderWidth:2,borderColor:'#fff'
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'right'}}
+  }
+});
+
+// ========== Chart: License distribution ==========
+const licCount = {red:0,yellow:0,white:0};
+allData.forEach(d=>licCount[d.license]++);
+new Chart(document.getElementById('chartLicense'),{
+  type:'pie',
+  data:{
+    labels:['紅牌 (550cc+)','黃牌 (250–549cc)','白牌 (≤249cc)'],
+    datasets:[{
+      data:[licCount.red, licCount.yellow, licCount.white],
+      backgroundColor:[RED,YELLOW,GRAY],
+      borderWidth:2,borderColor:'#fff'
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}
+});
+
+// ========== Chart: Status ==========
+const statCount = {active:0,discontinued:0,never:0,gray:0};
+allData.forEach(d=>statCount[d.status]++);
+new Chart(document.getElementById('chartStatus'),{
+  type:'bar',
+  data:{
+    labels:['總代理現役新車','已停產 / 二手豐富','未引進台灣','僅貿易商水貨'],
+    datasets:[{
+      label:'車款數',
+      data:[statCount.active, statCount.discontinued, statCount.never, statCount.gray],
+      backgroundColor:[GREEN, YELLOW, GRAY, BLUE],
+      borderRadius:6
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#eef0f4'}}}
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# Only track index.html for the public site
+*
+!.gitignore
+!index.html
